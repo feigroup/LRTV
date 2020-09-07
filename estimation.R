@@ -157,7 +157,7 @@ for (i in 1:length(N.list)) {
       bG = proximal(Y,Z,X,p=4,N=N,lambdaL=lambdaL,alpha=alpha,thres=1e-4,verbose = F)
       t.alpha2 = Sys.time()
       temp[,,j,k] = bG
-      cat(paste("N = ",N,", lambdaL = ",round(lambdaL,2),", alpha = ",formatC(alpha, format = "e", digits = 2),", time = ",round(as.numeric(difftime(t.alpha2,t.alpha1, unit="s")),2)," s.",sep=""))
+      cat(paste("N = ",N,", lambdaL = ",round(lambdaL,2),", alpha = ",formatC(alpha, format = "e", digits = 2),", time = ",round(as.numeric(difftime(t.alpha2,t.alpha1, unit="s")),2)," s.\n",sep=""))
     }
     t.lambda2 = Sys.time()
     cat(paste("Sub-iteration for N = ",N,", lambdaL = ",round(lambdaL,2), ", time = ",round(as.numeric(difftime(t.lambda2,t.lambda1, unit="min")),2)," min.\n\n",sep=""))
