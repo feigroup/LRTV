@@ -21,7 +21,7 @@ beta.Z0
 bG.true = function(Z,p,N,coef){
   beta.Z = beta(coef,Z)
   ## Use B-spline regression to estimate beta_j for each j
-  do.call(rbind, lapply(1:dim(Z)[2], function(j){as.numeric(NA.adjust(coef(lm(BZ[,j]~bsplineS(Z[,j],breaks = seq(min(Z),max(Z),length.out = N),norder = p,nderiv = 0)-1))))} ))
+  do.call(rbind, lapply(1:dim(Z)[2], function(j){as.numeric(NA.adjust(coef(lm(beta.Z[,j]~bsplineS(Z[,j],breaks = seq(min(Z),max(Z),length.out = N),norder = p,nderiv = 0)-1))))} ))
 }
 
 # soft-thresholding SVD
