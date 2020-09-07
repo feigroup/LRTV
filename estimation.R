@@ -67,12 +67,13 @@ proximal = function(Y,Z,X,p,N,lambdaL,alpha,thres=1e-4,smooth.penalty=FALSE,lamb
     nabla = nabla1 + nabla2
     # Soft-thresholding SVT
     bGnew = SVT(bG-alpha*nabla,alpha*lambdaL)
-    epsilon = sum((bGnew-bG)^2)/sum(bG^2)
+    epsilon = sum((bGnew-bG)^2)/(sum(bG^2)+1e-5)
     time2 = Sys.time()
     t_temp = difftime(time2, time1, unit="s")
     i = i + 1
     if(verbose) print(paste("Iteration ",i,", epsilon = ",round(epsilon,5),", time = ",round(as.numeric(t_temp),2)," s.",sep=""))
     bG = bGnew
+    if(i > 100) break
   }
   return(bG)
 }
@@ -140,38 +141,62 @@ p = 4
 
 # Vary: N,lambdaL,alpha
 N.list = 3:10
-lambdaL.list = exp(seq(log(1), log(1000), length.out = 20))
-alpha.list = exp(seq(log(1e-5), log(1e-2), length.out = 10))
+lambdaL.list = exp(seq(log(1), log(1000), length.out = 10))
+alpha.list = exp(seq(log(1e-5), log(1e-2), length.out = 5))
 
-for (i in 1:length(N.list)) {
-  N = N.list[i]
+# for (i in 1:length(N.list)) {
+#   N = N.list[i]
+#   r = N + p -2
+#   temp = array(0,dim=c(d,r,length(lambdaL.list),length(alpha.list)))
+#   t.N1 = Sys.time()
+#   for (j in 1:length(lambdaL.list)) {
+#     lambdaL = lambdaL.list[j]
+#     t.lambda1 = Sys.time()
+#     for (k in 1:length(alpha.list)) {
+#       alpha = alpha.list[k]
+#       t.alpha1 = Sys.time()
+#       bG = proximal(Y,Z,X,p=4,N=N,lambdaL=lambdaL,alpha=alpha,thres=1e-4,verbose = F)
+#       t.alpha2 = Sys.time()
+#       temp[,,j,k] = bG
+#       cat(paste("N = ",N,", lambdaL = ",round(lambdaL,2),", alpha = ",formatC(alpha, format = "e", digits = 2),", time = ",round(as.numeric(difftime(t.alpha2,t.alpha1, unit="s")),2)," s.\n",sep=""))
+#     }
+#     t.lambda2 = Sys.time()
+#     cat(paste("Sub-iteration for N = ",N,", lambdaL = ",round(lambdaL,2), ", time = ",round(as.numeric(difftime(t.lambda2,t.lambda1, unit="min")),2)," min.\n\n",sep=""))
+#   }
+#   t.N2 = Sys.time()
+#   assign(paste("bG_hat_array.",N,sep=""),temp)
+#   autosave(paste("bG_hat_array.",N.list,sep=""),file="bG_hat.RData")
+#   cat(paste("Whole iteration for N = ",N, ", time = ",round(as.numeric(difftime(t.N2, t.N1, unit="h")),2)," h.\n\n\n",sep=""))
+# }
+# 
+
+
+
+N = 10
+bG_hat_array.10 = mapply(function(j,k){
   r = N + p -2
-  temp = array(0,dim=c(d,r,length(lambdaL.list),length(alpha.list)))
-  t.N1 = Sys.time()
-  for (j in 1:length(lambdaL.list)) {
-    lambdaL = lambdaL.list[j]
-    t.lambda1 = Sys.time()
-    for (k in 1:length(alpha.list)) {
-      alpha = alpha.list[k]
-      t.alpha1 = Sys.time()
-      bG = proximal(Y,Z,X,p=4,N=N,lambdaL=lambdaL,alpha=alpha,thres=1e-4,verbose = F)
-      t.alpha2 = Sys.time()
-      temp[,,j,k] = bG
-      cat(paste("N = ",N,", lambdaL = ",round(lambdaL,2),", alpha = ",formatC(alpha, format = "e", digits = 2),", time = ",round(as.numeric(difftime(t.alpha2,t.alpha1, unit="s")),2)," s.\n",sep=""))
-    }
-    t.lambda2 = Sys.time()
-    cat(paste("Sub-iteration for N = ",N,", lambdaL = ",round(lambdaL,2), ", time = ",round(as.numeric(difftime(t.lambda2,t.lambda1, unit="min")),2)," min.\n\n",sep=""))
-  }
-  t.N2 = Sys.time()
-  assign(paste("bG_hat_array.",N,sep=""),temp)
-  autosave(paste("bG_hat_array.",N.list,sep=""),file="bG_hat.RData")
-  cat(paste("Whole iteration for N = ",N, ", time = ",round(as.numeric(difftime(t.N2, t.N1, unit="h")),2)," h.\n\n\n",sep=""))
-}
+  lambdaL = lambdaL.list[j]
+  alpha = alpha.list[k]
+  t1 = Sys.time()
+  bG = proximal(Y,Z,X,p=4,N=N,lambdaL=lambdaL,alpha=alpha,thres=1e-4,verbose=FALSE)
+  t2 = Sys.time()
+  cat(paste("(j,k) = (", j,",",k,"), time = ",round(as.numeric(difftime(t2,t1, unit="s")),2)," s.\n",sep=""))
+  bG
+}, rep(1:length(lambdaL.list),length(alpha.list)), rep(1:length(alpha.list),each=length(lambdaL.list)),SIMPLIFY = F)
+autosave(bG_hat_array.10,bG_hat_array.5,file="bG_hat.RData")
 
-
-
-
-
+N = 5
+bG_hat_array.5 = mapply(function(j,k){
+  r = N + p -2
+  lambdaL = lambdaL.list[j]
+  alpha = alpha.list[k]
+  t1 = Sys.time()
+  bG = proximal(Y,Z,X,p=4,N=N,lambdaL=lambdaL,alpha=alpha,thres=1e-4,verbose=FALSE)
+  t2 = Sys.time()
+  cat(paste("(j,k) = (", j,",",k,"), time = ",round(as.numeric(difftime(t2,t1, unit="s")),2)," s.\n",sep=""))
+  bG
+}, rep(1:length(lambdaL.list),length(alpha.list)), rep(1:length(alpha.list),each=length(lambdaL.list)),SIMPLIFY = F)
+autosave(bG_hat_array.10,bG_hat_array.5,file="bG_hat.RData")
 
 
 
@@ -212,7 +237,8 @@ for (i in 1:length(N.list)) {
 # bG2 = proximal(Y,Z,X,p=4,N=10,lambdaL=500,alpha=5e-3,thres=1e-4,verbose = T)
 # 
 # Y_hat = Y_hat(bG,Z,p,N)
-# sqrt(sum((Y_hat1-Y)^2/d/n))
+# sqrt(sum((Y_hat-Y)^2/d/n))
+# sqrt(sum((err)^2/d/n))
 # sqrt(sum((Y)^2/d/n))
 
 
@@ -224,6 +250,19 @@ for (i in 1:length(N.list)) {
 
 # bG0 = bG.true(Z,p,N,coef)
 # rankMatrix(bG0)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
